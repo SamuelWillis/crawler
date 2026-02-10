@@ -1,18 +1,20 @@
 defmodule WebCrawler do
   @moduledoc """
-  Documentation for `WebCrawler`.
+  Entry point for crawlin'
   """
 
-  @doc """
-  Hello world.
+  def crawl(url, _visited \\ []) do
+    uri = URI.new!(url) |> dbg(label: :parsed)
 
-  ## Examples
+    %Req.Response{body: body} = Req.new(url: uri) |> Req.get!() |> dbg(label: :response)
 
-      iex> WebCrawler.hello()
-      :world
-
-  """
-  def hello do
-    :world
+    body
+    |> Floki.parse_document!()
+    |> Floki.find("a[href]")
+    |> Stream.map(&Floki.attribute(&1, "href"))
+    |> Stream.map(&hd/1)
+    |> Stream.map(&URI.merge(uri, &1))
+    |> Enum.reject(&(&1.host != uri.host))
+    |> dbg(label: :found)
   end
 end
