@@ -3,18 +3,32 @@ defmodule WebCrawler do
   Entry point for crawlin'
   """
 
-  def crawl(url, _visited \\ []) do
-    uri = URI.new!(url) |> dbg(label: :parsed)
+  def crawl(url) do
+    uri = URI.new!(url)
 
-    %Req.Response{body: body} = Req.new(url: uri) |> Req.get!() |> dbg(label: :response)
+    uri
+    |> crawl([])
+    |> Enum.map(&URI.to_string/1)
+    |> Enum.frequencies()
+  end
 
-    body
-    |> Floki.parse_document!()
-    |> Floki.find("a[href]")
-    |> Stream.map(&Floki.attribute(&1, "href"))
-    |> Stream.map(&hd/1)
-    |> Stream.map(&URI.merge(uri, &1))
-    |> Enum.reject(&(&1.host != uri.host))
-    |> dbg(label: :found)
+  defp crawl(uri, visited) do
+    %Req.Response{body: body} = Req.new(url: uri) |> Req.get!()
+    visited = [uri | visited]
+
+    found =
+      body
+      |> Floki.parse_document!()
+      |> Floki.find("a[href]")
+      |> Enum.map(&Floki.attribute(&1, "href"))
+      |> Enum.map(&hd/1)
+      |> Enum.map(&URI.merge(uri, &1))
+      |> Enum.reject(&(&1.host != uri.host))
+      |> Enum.reject(&Enum.member?(visited, &1))
+      # Change the recursion somehow so that we add the results of the crawling to the visited for the next call
+      |> Enum.map(&crawl(&1, visited))
+      |> List.flatten()
+
+    [uri | found]
   end
 end
