@@ -31,3 +31,9 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/web_crawler>.
+
+## Prompt
+
+[This /r/dailyprogrammer
+challenge](https://www.reddit.com/r/dailyprogrammer/comments/7dlaeq/20171117_challenge_340_hard_write_a_web_crawler/)
+provided the inspiration for this.
